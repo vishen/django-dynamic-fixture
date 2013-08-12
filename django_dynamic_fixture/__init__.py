@@ -6,7 +6,7 @@ Module that contains wrappers and shortcuts (aliases).
 """
 
 from django_dynamic_fixture.ddf import DynamicFixture, Copier, DDFLibrary, \
-    set_pre_save_receiver, set_post_save_receiver
+    set_pre_save_receiver, set_post_save_receiver, model_instance_registar
 from django_dynamic_fixture.django_helper import print_field_values
 from django_dynamic_fixture.fixture_algorithms.sequential_fixture import SequentialDataFixture, \
     StaticSequentialDataFixture

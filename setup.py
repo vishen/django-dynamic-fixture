@@ -23,7 +23,7 @@ install_requires = [
 ]
 
 setup(name='django-dynamic-fixture',
-      url='https://github.com/paulocheque/django-dynamic-fixture',
+      url='https://github.com/vishen/django-dynamic-fixture',
       author="paulocheque",
       author_email='paulocheque@gmail.com',
       keywords='python django testing fixture',

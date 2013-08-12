@@ -58,6 +58,56 @@ class PendingField(Exception):
     "Internal exception to control pending fields when using Copier."
 
 
+class ModelInstance:
+
+    _definitions = {}
+
+    def register(self, model_class, max_per_model_class):
+        self._definitions[model_class] = max_per_model_class
+
+    def get_definition(self, model_class):
+        return self._definitions.get(model_class)
+
+    @property
+    def in_use(self):
+        return bool(self._definitions)
+
+model_instance_registar = ModelInstance()
+
+def cache_instance(func):
+    instance_cache = {}
+
+    import random
+
+    def wrapped(self, model_class, **kwargs): 
+
+        model_max_instances = model_instance_registar.get_definition(model_class)
+
+        if not model_max_instances:
+            return func(self, model_class, **kwargs)
+
+        def _get_instance():
+            while True:
+                try:
+                    return func(self, model_class, **kwargs)
+                    
+                except BadDataError:
+                    pass
+
+        # Cache the instances
+        try:
+            if len(instance_cache[model_class]) < model_max_instances:
+                instance_cache[model_class].append(_get_instance())
+
+        except KeyError:
+            instance_cache[model_class] = [_get_instance()]
+
+        returning = instance_cache[model_class][random.randint(0, len(instance_cache[model_class]) - 1)]
+        return returning
+
+    return wrapped
+
+
 def set_pre_save_receiver(model_class, callback_function):
     """
     @model_class: a model_class can have only one receiver. Do not complicate yourself.
@@ -414,6 +464,8 @@ class DynamicFixture(object):
         configuration.update(self.kwargs) # Used by F: kwargs are passed by constructor, not by get.
         return configuration
 
+    
+    @cache_instance
     def new(self, model_class, shelve=False, named_shelve=None, persist_dependencies=True, **kwargs):
         """
         Create an instance filled with data without persist it.
@@ -537,4 +589,5 @@ class DynamicFixture(object):
                     raise e, None, sys.exc_info()[2]
                 except Exception as e:
                     raise InvalidManyToManyConfigurationError(get_unique_field_name(field), e), None, sys.exc_info()[2]
+
         return instance
